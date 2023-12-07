@@ -39,21 +39,23 @@ class _UploadPdfScreenState extends State<UploadPdfScreen> {
   }
 
   Future<void> _uploadFile() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform
-          .pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
+    if (_formKey != null && _formKey.currentState!.validate()) {
+      try {
+        FilePickerResult? result = await FilePicker.platform
+            .pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
 
-      if (result != null) {
-        setState(() {
-          _selectedFile = File(result.files.single.path!);
-        });
-      } else {
-        // User canceled the picker
+        if (result != null) {
+          setState(() {
+            _selectedFile = File(result.files.single.path!);
+          });
+        } else {
+          // User canceled the picker
+        }
+      } on PlatformException catch (e) {
+        print("Unsupported operation" + e.toString());
+      } catch (ex) {
+        print(ex);
       }
-    } on PlatformException catch (e) {
-      print("Unsupported operation" + e.toString());
-    } catch (ex) {
-      print(ex);
     }
   }
 
