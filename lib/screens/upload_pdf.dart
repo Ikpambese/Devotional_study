@@ -22,6 +22,7 @@ class _UploadPdfScreenState extends State<UploadPdfScreen> {
   File? _selectedFile;
   String? _uploadedFileURL;
   int selectedNumber = 0;
+  int? id;
   DateTime selectedDate = DateTime.now();
 
   Future<void> _selectDate(BuildContext context) async {
@@ -39,23 +40,21 @@ class _UploadPdfScreenState extends State<UploadPdfScreen> {
   }
 
   Future<void> _uploadFile() async {
-    if (_formKey != null && _formKey.currentState!.validate()) {
-      try {
-        FilePickerResult? result = await FilePicker.platform
-            .pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
+    try {
+      FilePickerResult? result = await FilePicker.platform
+          .pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
 
-        if (result != null) {
-          setState(() {
-            _selectedFile = File(result.files.single.path!);
-          });
-        } else {
-          // User canceled the picker
-        }
-      } on PlatformException catch (e) {
-        print("Unsupported operation" + e.toString());
-      } catch (ex) {
-        print(ex);
+      if (result != null) {
+        setState(() {
+          _selectedFile = File(result.files.single.path!);
+        });
+      } else {
+        // User canceled the picker
       }
+    } on PlatformException catch (e) {
+      print("Unsupported operation" + e.toString());
+    } catch (ex) {
+      print(ex);
     }
   }
 
@@ -106,6 +105,23 @@ class _UploadPdfScreenState extends State<UploadPdfScreen> {
         },
       );
 
+// Get the current counter value
+      DocumentSnapshot counterSnapshot = await FirebaseFirestore.instance
+          .collection('Documents')
+          .doc('id')
+          .get();
+
+      Map<String, dynamic>? data =
+          counterSnapshot.data() as Map<String, dynamic>?;
+
+      int currentId =
+          counterSnapshot.exists ? (data != null ? data['id'] ?? 0 : 0) : 0;
+
+      // Increment the counter in memory
+      int newId = currentId + 1;
+      print('WETIN DEY DO YOU');
+      print(newId);
+      print('WETIN DEY DO YOU');
       firebase_storage.Reference storageReference = firebase_storage
           .FirebaseStorage.instance
           .ref()
@@ -127,8 +143,12 @@ class _UploadPdfScreenState extends State<UploadPdfScreen> {
             'doc_url': _uploadedFileURL,
             'doc_date': _docDate,
             'page_num': _pageNum,
-            'month_year': formattedDate
+            'month_year': formattedDate,
+            'id': newId
           });
+
+          // Update the counter value in Firestore
+
           // Reset fields after successful upload
           setState(() {
             _docTitle = null;
@@ -221,13 +241,18 @@ class _UploadPdfScreenState extends State<UploadPdfScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(Icons.picture_as_pdf,
-                        color: Colors.red, size: 50),
                     ElevatedButton(
-                      onPressed: () async {
-                        await _uploadFile();
+                      onPressed: () {
+                        _uploadFile();
                       },
                       child: const Text('Select PDF'),
+                    ),
+                    InkWell(
+                      onTap: () {
+                        _uploadFile();
+                      },
+                      child: const Icon(Icons.picture_as_pdf,
+                          color: Colors.red, size: 50),
                     ),
                   ],
                 ),

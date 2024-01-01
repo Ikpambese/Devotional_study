@@ -90,6 +90,7 @@ class _UploadDevotionalDataPageState extends State<UploadDevotionalDataPage> {
         String formattedDate = DateFormat('E MMM d y').format(_selectedDate);
         try {
           _uploadedImageURL = await storageReference.getDownloadURL();
+          print(formattedDate);
           await FirebaseFirestore.instance.collection('devotionalToday').add({
             'imgurl': _uploadedImageURL,
             'title': _titleController.text,
